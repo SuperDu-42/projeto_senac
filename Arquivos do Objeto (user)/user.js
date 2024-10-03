@@ -12,7 +12,9 @@ function create_user(req, res){
             "id" : vusers.length+1,
             "genero" : genero,
             "idade" : idade,
-            "nome" : nome
+            "nome" : nome,
+            "deletedAt": null      
+
         }
         vusers.push(ouser)
 
@@ -29,7 +31,7 @@ app.post('/user', create_user)
 function read_user(req, res) {
     return res.status(200).json({
         message: "Listando todos os usuários...", 
-        db : vusers
+        db : vusers.filter(u => u.deletedAt == null)  // Aula 6
     } )
 }
 app.get( '/user/', read_user)
@@ -41,9 +43,9 @@ function get_user_by_id(req, res) {  /// Função que recupera usuário por ID e
     //let id = req.params.id - Código alternativo.
      let { id } = req.params;
 
-     const idx = vusers.findIndex(u => u.id == id)
+     const idx = vusers[idx].findIndex(u => u.id == id)
 
-        if(idx === -1){
+        if(idx == -1 || vusers.deletedAt != null){  //Aula 6
 
             return res.status(404).json({
                 message: "Usuário não encontrado.",
@@ -56,9 +58,9 @@ function get_user_by_id(req, res) {  /// Função que recupera usuário por ID e
                 db: vusers[idx]
          })
     
-}
-    
-    
+}    
+app.get( '/user/:id', get_user_by_id)
+
    /* --------- Código alternativo para get_user_by_id, GET.---------
    
    let { id } = req.params;
@@ -79,7 +81,7 @@ function get_user_by_id(req, res) {  /// Função que recupera usuário por ID e
        db : []
    } )
 }*/
-app.get( '/user/:id', get_user_by_id)
+
 
 
 
@@ -93,7 +95,8 @@ function put_user_by_id(req, res){
             
     const idx = vusers.findIndex(u => u.id == id)
 
-       if(idx === -1){
+       if(idx === -1 || vusers[idx].deletedAt != null){  //Aula 6
+       
 
            return res.status(404).json({
                message: "Usuário não encontrado",
@@ -112,12 +115,26 @@ function put_user_by_id(req, res){
                db: vusers[idx]
 })    
 }
-
 app.put( '/user/:id', put_user_by_id)
-                    
-            
-        
 
+
+function delete_user(req, res){ //Aula 6: Inclusão de uma função DELETE na api
+    let {id} = req.params
+
+    const idx = vusers.findIndex(u => u.id == id)
+    if(idx != -1){
+        vusers[idx].deletedAt = new Date()
+        return res.status(203).json({
+            message: "Foi de base",
+        })
+    }
+
+    return res.status(404).json({
+        message: "Não encontrado",
+    })
+}
+app.delete('user/:id', delete_user)
+            
 
 app.listen(3000, () => {
     console.log('http://localhost:3000')
